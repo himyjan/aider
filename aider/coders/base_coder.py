@@ -27,10 +27,10 @@ from aider.history import ChatSummary
 from aider.io import ConfirmGroup, InputOutput
 from aider.linter import Linter
 from aider.llm import litellm
+from aider.models import RETRY_TIMEOUT
 from aider.repo import ANY_GIT_ERROR, GitRepo
 from aider.repomap import RepoMap
 from aider.run_cmd import run_cmd
-from aider.sendchat import RETRY_TIMEOUT, send_completion
 from aider.utils import format_content, format_messages, format_tokens, is_image_file
 
 from ..dump import dump  # noqa: F401
@@ -85,7 +85,7 @@ class Coder:
     max_reflections = 3
     edit_format = None
     yield_stream = False
-    temperature = 0
+    temperature = None
     auto_lint = True
     auto_test = False
     test_cmd = None
@@ -1235,8 +1235,6 @@ class Coder:
         input_tokens = self.main_model.token_count(messages)
         max_input_tokens = self.main_model.info.get("max_input_tokens") or 0
 
-        proceed = None
-
         if max_input_tokens and input_tokens >= max_input_tokens:
             self.io.tool_error(
                 f"Your estimated chat context of {input_tokens:,} tokens exceeds the"
@@ -1246,26 +1244,13 @@ class Coder:
             self.io.tool_output("- Use /drop to remove unneeded files from the chat")
             self.io.tool_output("- Use /clear to clear the chat history")
             self.io.tool_output("- Break your code into smaller files")
-            proceed = "Y"
             self.io.tool_output(
                 "It's probably safe to try and send the request, most providers won't charge if"
                 " the context limit is exceeded."
             )
 
-        # Special warning for Ollama models about context window size
-        if self.main_model.name.startswith(("ollama/", "ollama_chat/")):
-            extra_params = getattr(self.main_model, "extra_params", None) or {}
-            num_ctx = extra_params.get("num_ctx", 2048)
-            if input_tokens > num_ctx:
-                proceed = "N"
-                self.io.tool_warning(f"""
-Your Ollama model is configured with num_ctx={num_ctx} tokens of context window.
-You are attempting to send {input_tokens} tokens.
-See https://aider.chat/docs/llms/ollama.html#setting-the-context-window-size
-""".strip())  # noqa
-
-        if proceed and not self.io.confirm_ask("Try to proceed anyway?", default=proceed):
-            return False
+            if not self.io.confirm_ask("Try to proceed anyway?"):
+                return False
         return True
 
     def send_message(self, inp):
@@ -1339,7 +1324,7 @@ See https://aider.chat/docs/llms/ollama.html#setting-the-context-window-size
                         exhausted = True
                         break
 
-                    self.multi_response_content = self.get_multi_response_content()
+                    self.multi_response_content = self.get_multi_response_content_in_progress()
 
                     if messages[-1]["role"] == "assistant":
                         messages[-1]["content"] = self.multi_response_content
@@ -1359,7 +1344,10 @@ See https://aider.chat/docs/llms/ollama.html#setting-the-context-window-size
                 self.live_incremental_response(True)
                 self.mdstream = None
 
-            self.partial_response_content = self.get_multi_response_content(True)
+            self.partial_response_content = self.get_multi_response_content_in_progress(True)
+            self.partial_response_content = self.main_model.remove_reasoning_content(
+                self.partial_response_content
+            )
             self.multi_response_content = ""
 
         self.io.tool_output()
@@ -1613,20 +1601,13 @@ See https://aider.chat/docs/llms/ollama.html#setting-the-context-window-size
 
         self.io.log_llm_history("TO LLM", format_messages(messages))
 
-        if self.main_model.use_temperature:
-            temp = self.temperature
-        else:
-            temp = None
-
         completion = None
         try:
-            hash_object, completion = send_completion(
-                model.name,
+            hash_object, completion = model.send_completion(
                 messages,
                 functions,
                 self.stream,
-                temp,
-                extra_params=model.extra_params,
+                self.temperature,
             )
             self.chat_completion_call_hashes.append(hash_object.hexdigest())
 
@@ -1753,7 +1734,7 @@ See https://aider.chat/docs/llms/ollama.html#setting-the-context-window-size
         self.mdstream.update(show_resp, final=final)
 
     def render_incremental_response(self, final):
-        return self.get_multi_response_content()
+        return self.get_multi_response_content_in_progress()
 
     def calculate_and_show_tokens_and_cost(self, messages, completion=None):
         prompt_tokens = 0
@@ -1876,22 +1857,14 @@ See https://aider.chat/docs/llms/ollama.html#setting-the-context-window-size
         self.message_tokens_sent = 0
         self.message_tokens_received = 0
 
-    def get_multi_response_content(self, final=False):
+    def get_multi_response_content_in_progress(self, final=False):
         cur = self.multi_response_content or ""
         new = self.partial_response_content or ""
 
         if new.rstrip() != new and not final:
             new = new.rstrip()
 
-        res = cur + new
-
-        if self.main_model.remove_reasoning:
-            pattern = (
-                f"<{self.main_model.remove_reasoning}>.*?</{self.main_model.remove_reasoning}>"
-            )
-            res = re.sub(pattern, "", res, flags=re.DOTALL).strip()
-
-        return res
+        return cur + new
 
     def get_rel_fname(self, fname):
         try:

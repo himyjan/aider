@@ -95,7 +95,9 @@ class FileWatcher:
         if self.verbose:
             dump(rel_path)
 
-        if self.gitignore_spec and self.gitignore_spec.match_file(str(rel_path)):
+        if self.gitignore_spec and self.gitignore_spec.match_file(
+            rel_path.as_posix() + ("/" if path_abs.is_dir() else "")
+        ):
             return False
 
         if self.verbose:
@@ -115,8 +117,23 @@ class FileWatcher:
 
         def watch_files():
             try:
+                # If a gitignore spec exists, filter out top-level entries that match it
+                if self.gitignore_spec:
+                    roots_to_watch = [
+                        str(path)
+                        for path in self.root.iterdir()
+                        if not self.gitignore_spec.match_file(
+                            path.relative_to(self.root).as_posix() + ("/" if path.is_dir() else "")
+                        )
+                    ]
+                    # Fallback to watching root if all top-level items are filtered out
+                    if not roots_to_watch:
+                        roots_to_watch = [str(self.root)]
+                else:
+                    roots_to_watch = [str(self.root)]
+
                 for changes in watch(
-                    str(self.root), watch_filter=self.filter_func, stop_event=self.stop_event
+                    *roots_to_watch, watch_filter=self.filter_func, stop_event=self.stop_event
                 ):
                     if not changes:
                         continue

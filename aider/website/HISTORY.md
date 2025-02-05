@@ -23,20 +23,36 @@ cog.out(text)
 ]]]-->
 
 
-### Aider v0.72.4
+### main branch
 
-- Support for DeepSeek R1 free.
-  - Use shortcut via OpenRouter: `--model openrouter/deepseek/deepseek-r1:free`
+- Fast startup with more providers and when model metadata provided in local files.
+- Removes `<think>` tags from R1 responses for commit messages (and other weak model uses).
+- Now dynamically sets `num_ctx` for Ollama, to ensure the context window can hold the chat.
+- Watch files now fully ignores top-level directories, to reduce the chance of hitting OS limits on number of watched files. Helpful to ignore giant subtrees like `node_modules`.
+- Improved .gitignore handling:
+  - Honor ignores already in effect regardless of how they've been configured.
+  - Check for .env only when the file exists.
+- Added "catch all" model-specific configuration settings for o3-mini, DeepSeek V3 & R1, o1-mini, o1.
+- Added Azure o3-Mini model support.
+- Aider wrote 68% of the code in this release.
+
+### Aider v0.73.0
+
+- Full support for o3-mini: `aider --model o3-mini`
+- New `--reasoning-effort` argument: low, medium, high.
+- Improved handling of context window size limits, with better messaging and Ollama-specific guidance.
+- Added support for removing model-specific reasoning tags from responses with `remove_reasoning: tagname` model setting.
+- Auto-create parent directories when creating new files, by xqyz.
+- Support for R1 free on OpenRouter: `--model openrouter/deepseek/deepseek-r1:free`
+- Aider wrote 69% of the code in this release.
 
 ### Aider v0.72.3
 
 - Enforce user/assistant turn order to avoid R1 errors, by miradnanali.
 - Case-insensitive model name matching while preserving original case.
-- Aider wrote 67% of the code in this release.
 
 ### Aider v0.72.2
 - Harden against user/assistant turn order problems which cause R1 errors.
-- Added environment variable AIDER_SANITY_CHECK_TURNS for turn order validation.
 
 ### Aider v0.72.1
 - Fix model metadata for `openrouter/deepseek/deepseek-r1`

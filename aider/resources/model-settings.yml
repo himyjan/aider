@@ -400,14 +400,14 @@
 
 - name: openrouter/deepseek/deepseek-r1:free
   edit_format: diff
-  weak_model_name: openrouter/deepseek/deepseek-chat:free
+  weak_model_name: openrouter/deepseek/deepseek-r1:free
   use_repo_map: true
   examples_as_sys_msg: true
   extra_params:
     max_tokens: 8192
   caches_by_default: true
   use_temperature: false
-  editor_model_name: openrouter/deepseek/deepseek-chat:free
+  editor_model_name: openrouter/deepseek/deepseek-r1:free
   editor_edit_format: editor-diff
 
 - name: deepseek/deepseek-reasoner
@@ -611,7 +611,7 @@
   streaming: true
   editor_model_name: fireworks_ai/accounts/fireworks/models/deepseek-v3
   editor_edit_format: editor-diff
-  remove_reasoning: false
+  remove_reasoning: think
   extra_params:
       max_tokens: 160000
 
@@ -622,3 +622,37 @@
   examples_as_sys_msg: true
   extra_params:
       max_tokens: 128000
+
+- name: openai/o3-mini
+  edit_format: diff
+  weak_model_name: gpt-4o-mini
+  use_repo_map: true
+  use_temperature: false
+  editor_model_name: gpt-4o
+  editor_edit_format: editor-diff
+  
+- name: o3-mini
+  edit_format: diff
+  weak_model_name: gpt-4o-mini
+  use_repo_map: true
+  use_temperature: false
+  editor_model_name: gpt-4o
+  editor_edit_format: editor-diff
+
+- name: openrouter/openai/o3-mini
+  edit_format: diff
+  weak_model_name: openrouter/openai/gpt-4o-mini
+  use_repo_map: true
+  use_temperature: false
+  editor_model_name: openrouter/openai/gpt-4o
+  editor_edit_format: editor-diff
+
+- name: azure/o3-mini
+  edit_format: diff
+  weak_model_name: azure/gpt-4o-mini
+  use_repo_map: true
+  use_temperature: false
+  editor_model_name: azure/gpt-4o
+  editor_edit_format: editor-diff
+
+  

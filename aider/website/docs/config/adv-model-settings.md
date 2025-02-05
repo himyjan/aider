@@ -74,7 +74,7 @@ a model that aider doesn't know about.
 You can override or add settings for any model by creating a `.aider.model.settings.yml` file in one of these locations:
 
 - Your home directory.
-- The root if your git repo.
+- The root of your git repo.
 - The current directory where you launch aider.
 - Or specify a specific file with the `--model-settings-file <filename>` switch.
 
@@ -256,6 +256,14 @@ cog.out("```\n")
   editor_model_name: azure/gpt-4o
   editor_edit_format: editor-diff
 
+- name: azure/o3-mini
+  edit_format: diff
+  weak_model_name: azure/gpt-4o-mini
+  use_repo_map: true
+  use_temperature: false
+  editor_model_name: azure/gpt-4o
+  editor_edit_format: editor-diff
+
 - name: bedrock/anthropic.claude-3-5-haiku-20241022-v1:0
   edit_format: diff
   weak_model_name: bedrock/anthropic.claude-3-5-haiku-20241022-v1:0
@@ -398,7 +406,7 @@ cog.out("```\n")
   use_temperature: false
   editor_model_name: fireworks_ai/accounts/fireworks/models/deepseek-v3
   editor_edit_format: editor-diff
-  remove_reasoning: false
+  remove_reasoning: think
 
 - name: fireworks_ai/accounts/fireworks/models/deepseek-v3
   edit_format: diff
@@ -579,6 +587,14 @@ cog.out("```\n")
   editor_model_name: gpt-4o
   editor_edit_format: editor-diff
 
+- name: o3-mini
+  edit_format: diff
+  weak_model_name: gpt-4o-mini
+  use_repo_map: true
+  use_temperature: false
+  editor_model_name: gpt-4o
+  editor_edit_format: editor-diff
+
 - name: openai/gpt-4o
   edit_format: diff
   weak_model_name: gpt-4o-mini
@@ -633,6 +649,14 @@ cog.out("```\n")
   use_system_prompt: false
   use_temperature: false
   editor_model_name: openai/gpt-4o
+  editor_edit_format: editor-diff
+
+- name: openai/o3-mini
+  edit_format: diff
+  weak_model_name: gpt-4o-mini
+  use_repo_map: true
+  use_temperature: false
+  editor_model_name: gpt-4o
   editor_edit_format: editor-diff
 
 - name: openrouter/anthropic/claude-3-opus
@@ -700,14 +724,14 @@ cog.out("```\n")
 
 - name: openrouter/deepseek/deepseek-r1:free
   edit_format: diff
-  weak_model_name: openrouter/deepseek/deepseek-chat:free
+  weak_model_name: openrouter/deepseek/deepseek-r1:free
   use_repo_map: true
   examples_as_sys_msg: true
   extra_params:
     max_tokens: 8192
   caches_by_default: true
   use_temperature: false
-  editor_model_name: openrouter/deepseek/deepseek-chat:free
+  editor_model_name: openrouter/deepseek/deepseek-r1:free
   editor_edit_format: editor-diff
 
 - name: openrouter/meta-llama/llama-3-70b-instruct
@@ -749,6 +773,14 @@ cog.out("```\n")
   use_system_prompt: false
   use_temperature: false
   streaming: false
+  editor_model_name: openrouter/openai/gpt-4o
+  editor_edit_format: editor-diff
+
+- name: openrouter/openai/o3-mini
+  edit_format: diff
+  weak_model_name: openrouter/openai/gpt-4o-mini
+  use_repo_map: true
+  use_temperature: false
   editor_model_name: openrouter/openai/gpt-4o
   editor_edit_format: editor-diff
 
